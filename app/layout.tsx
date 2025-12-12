@@ -4,6 +4,7 @@ import type { Metadata } from 'next'
 import { JetBrains_Mono, Public_Sans } from 'next/font/google'
 
 import { cn } from '@/lib/utils'
+import { Toaster } from '@/components/ui/sonner'
 
 const fontSans = Public_Sans({
   variable: '--font-sans',
@@ -35,6 +36,7 @@ export default function RootLayout({
         )}
       >
         {children}
+        <Toaster richColors position="bottom-center" />
       </body>
     </html>
   )
