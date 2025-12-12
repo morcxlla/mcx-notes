@@ -27,7 +27,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={cn('antialiased', fontSans.variable, fontMono.variable)}>
+      <body
+        className={cn(
+          'antialiased bg-background text-foreground',
+          fontSans.variable,
+          fontMono.variable
+        )}
+      >
         {children}
       </body>
     </html>
