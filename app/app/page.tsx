@@ -11,13 +11,17 @@ import {
   Moon02Icon,
   PlusSignIcon,
   SourceCodeIcon,
+  TextAlignLeft01Icon,
   UserIcon,
   ViewIcon,
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { useTheme } from 'next-themes'
+import { useHotkeys } from 'react-hotkeys-hook'
 import ReactMarkdown from 'react-markdown'
+import { remark } from 'remark'
 import remarkGfm from 'remark-gfm'
+import remarkStringify from 'remark-stringify'
 import { toast } from 'sonner'
 
 import { notesDB, type Note } from '@/lib/db'
@@ -58,6 +62,7 @@ export default function NotesApp() {
   const [otp, setOTP] = useState('')
   const [otpSent, setOTPSent] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isFormatting, setIsFormatting] = useState(false)
 
   const { user, loading, signInWithOTP, verifyOTP, signOut } = useAuth()
   const { setTheme, resolvedTheme } = useTheme()
@@ -176,6 +181,44 @@ export default function NotesApp() {
     setContent(note.content)
   }
 
+  const formatMarkdown = async () => {
+    if (!content || isFormatting) return
+
+    setIsFormatting(true)
+    try {
+      const result = await remark()
+        .use(remarkGfm)
+        .use(remarkStringify, {
+          bullet: '-',
+          emphasis: '*',
+          strong: '*',
+          listItemIndent: 'one',
+        })
+        .process(content)
+
+      const formatted = String(result)
+      setContent(formatted)
+      toast.success('Markdown formatted')
+    } catch (error) {
+      console.error('Error formatting markdown:', error)
+      toast.error('Failed to format markdown')
+    } finally {
+      setIsFormatting(false)
+    }
+  }
+
+  useHotkeys(
+    'mod+shift+f',
+    (e) => {
+      e.preventDefault()
+      if (selectedNoteId && !showPreview) {
+        formatMarkdown()
+      }
+    },
+    { enableOnFormTags: ['TEXTAREA'] }
+  )
+
+  // Auth logic
   const handleSignIn = async () => {
     if (!email) {
       toast.error('Please enter your email')
@@ -487,23 +530,51 @@ export default function NotesApp() {
                 placeholder="Note title"
                 className="rounded-none text-xl font-semibold border-none bg-transparent focus-visible:ring-0 px-0"
               />
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowPreview(!showPreview)}
-              >
-                {showPreview ? (
-                  <>
-                    <HugeiconsIcon icon={SourceCodeIcon} strokeWidth={2} />
-                    Editor
-                  </>
-                ) : (
-                  <>
-                    <HugeiconsIcon icon={ViewIcon} strokeWidth={2} />
-                    Preview
-                  </>
-                )}
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={formatMarkdown}
+                  disabled={showPreview || isFormatting}
+                  title="Format markdown (Ctrl+Shift+F)"
+                >
+                  {isFormatting ? (
+                    <>
+                      <HugeiconsIcon
+                        icon={Loading03Icon}
+                        strokeWidth={2}
+                        className="animate-spin"
+                      />
+                      Formatting...
+                    </>
+                  ) : (
+                    <>
+                      <HugeiconsIcon
+                        icon={TextAlignLeft01Icon}
+                        strokeWidth={2}
+                      />
+                      Format
+                    </>
+                  )}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowPreview(!showPreview)}
+                >
+                  {showPreview ? (
+                    <>
+                      <HugeiconsIcon icon={SourceCodeIcon} strokeWidth={2} />
+                      Editor
+                    </>
+                  ) : (
+                    <>
+                      <HugeiconsIcon icon={ViewIcon} strokeWidth={2} />
+                      Preview
+                    </>
+                  )}
+                </Button>
+              </div>
             </header>
             <div className="flex-1 overflow-hidden">
               {showPreview ? (
