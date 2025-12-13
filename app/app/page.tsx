@@ -45,6 +45,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
+import { Kbd } from '@/components/ui/kbd'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
@@ -207,8 +208,9 @@ export default function NotesApp() {
     }
   }
 
+  // Format markdown shortcut
   useHotkeys(
-    'mod+shift+f',
+    'mod+f',
     (e) => {
       e.preventDefault()
       if (selectedNoteId && !showPreview) {
@@ -399,7 +401,7 @@ export default function NotesApp() {
                     onCheckedChange={(checked) =>
                       setTheme(checked ? 'dark' : 'light')
                     }
-                    className="ml-auto dark:group-hover:bg-secondary/60"
+                    className="ml-auto dark:group-focus:bg-secondary/60"
                   />
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
@@ -556,6 +558,8 @@ export default function NotesApp() {
                       Format
                     </>
                   )}
+
+                  <Kbd>Cmd + F</Kbd>
                 </Button>
                 <Button
                   variant="outline"
