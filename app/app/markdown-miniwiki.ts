@@ -24,6 +24,7 @@ Unordered lists with \`-\` or \`*\`:
 - Item 2
   - Nested item
 
+Task lists with \`- [ ]\`:
 - [x] Checked item
 - [ ] Unchecked item
 
@@ -35,6 +36,14 @@ Ordered lists with numbers:
 ### Links and Images
 - Links: \`[text](url)\`
 - Images: \`![alt text](url)\`
+
+### Tables
+Create tables with \`|\` and \`-\`:
+
+| Header 1 | Header 2 | Header 3 |
+|----------|----------|----------|
+| Cell 1   | Cell 2   | Cell 3   |
+| Cell 4   | Cell 5   | Cell 6   |
 
 ### Code
 Inline code with \`backticks\`
