@@ -4,7 +4,6 @@ import type { Metadata } from 'next'
 import { JetBrains_Mono, Public_Sans } from 'next/font/google'
 import { ThemeProvider } from 'next-themes'
 
-import { createClient } from '@/lib/supabase/server'
 import { cn } from '@/lib/utils'
 import { Toaster } from '@/components/ui/sonner'
 
@@ -28,12 +27,6 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  const supabase = await createClient()
-
-  const { data, error } = await supabase.auth.getUser()
-
-  const logged = !error || data?.user
-
   return (
     <html lang="en" suppressHydrationWarning>
       <body
