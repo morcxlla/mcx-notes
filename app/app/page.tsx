@@ -203,9 +203,11 @@ export default function NotesApp() {
       setEmail('')
       setOTP('')
       setOTPSent(false)
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error verifying OTP:', error)
-      toast.error(error?.message || 'Invalid code')
+      const errorMessage =
+        error instanceof Error ? error.message : 'Invalid code'
+      toast.error(errorMessage)
     } finally {
       setIsSubmitting(false)
     }
