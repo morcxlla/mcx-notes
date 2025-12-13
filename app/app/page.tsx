@@ -44,6 +44,8 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
 
+import { mdWiki } from './markdown-miniwiki'
+
 export default function NotesApp() {
   const [notes, setNotes] = useState<Note[]>([])
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null)
@@ -120,14 +122,17 @@ export default function NotesApp() {
   }, [title, content, selectedNoteId, notes, user])
 
   const createNewNote = async () => {
+    const isFirstNote = notes.length === 0
+
     const newNote: Note = {
       id: crypto.randomUUID(),
-      title: 'New note',
-      content: '# New note\n\nStart writing here...',
+      title: isFirstNote ? 'Welcome to Notes' : 'New note',
+      content: isFirstNote ? mdWiki : '# New note\n\nStart writing here...',
       createdAt: Date.now(),
       updatedAt: Date.now(),
       userId: user?.id,
     }
+
     try {
       await notesDB.saveNote(newNote)
       setNotes([newNote, ...notes])
