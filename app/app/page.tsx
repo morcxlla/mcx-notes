@@ -181,9 +181,8 @@ export default function NotesApp() {
       await signInWithOTP(email)
       setOTPSent(true)
       toast.success('Check your email for the code')
-    } catch (error) {
-      console.error('Error sending OTP:', error)
-      toast.error('Error sending code')
+    } catch {
+      // Error already handled in useAuth hook
     } finally {
       setIsSubmitting(false)
     }
@@ -203,11 +202,8 @@ export default function NotesApp() {
       setEmail('')
       setOTP('')
       setOTPSent(false)
-    } catch (error) {
-      console.error('Error verifying OTP:', error)
-      const errorMessage =
-        error instanceof Error ? error.message : 'Invalid code'
-      toast.error(errorMessage)
+    } catch {
+      // Error already handled in useAuth hook
     } finally {
       setIsSubmitting(false)
     }
@@ -217,9 +213,8 @@ export default function NotesApp() {
     try {
       await signOut()
       toast.success('Signed out successfully')
-    } catch (error) {
-      console.error('Error signing out:', error)
-      toast.error('Error signing out')
+    } catch {
+      // Error already handled in useAuth hook
     }
   }
 

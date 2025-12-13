@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { User } from '@supabase/supabase-js'
+import { toast } from 'sonner'
 
 import { notesDB, syncEngine } from '@/lib/db'
 import { createClient } from '@/lib/supabase/client'
@@ -49,7 +50,20 @@ export function useAuth() {
 
   const signInWithOTP = async (email: string) => {
     const { error } = await supabase.auth.signInWithOtp({ email })
-    if (error) throw error
+
+    if (error) {
+      if (error.message.includes('rate limit')) {
+        toast.error('Too many attempts. Please wait a moment and try again.')
+      } else if (
+        error.message.includes('invalid') ||
+        error.message.includes('email')
+      ) {
+        toast.error('Please enter a valid email address.')
+      } else {
+        toast.error('Failed to send code. Please try again.')
+      }
+      throw error
+    }
   }
 
   const verifyOTP = async (email: string, token: string) => {
@@ -58,12 +72,28 @@ export function useAuth() {
       token,
       type: 'magiclink',
     })
-    if (error) throw error
+
+    if (error) {
+      if (error.message.includes('expired')) {
+        toast.error('Code has expired. Please request a new one.')
+      } else if (error.message.includes('invalid')) {
+        toast.error('Invalid code. Please check and try again.')
+      } else if (error.message.includes('too many')) {
+        toast.error('Too many attempts. Please wait a moment.')
+      } else {
+        toast.error('Verification failed. Please try again.')
+      }
+      throw error
+    }
   }
 
   const signOut = async () => {
     const { error } = await supabase.auth.signOut()
-    if (error) throw error
+
+    if (error) {
+      toast.error('Failed to sign out. Please try again.')
+      throw error
+    }
   }
 
   return {
