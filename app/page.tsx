@@ -221,8 +221,14 @@ export default function NotesApp() {
             </DropdownMenuTrigger>
             <DropdownMenuContent>
               <DropdownMenuGroup>
+<<<<<<< HEAD
                 {/* <DropdownMenuLabel>My Account</DropdownMenuLabel>
                 <DropdownMenuSeparator /> */}
+=======
+                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>Profile</DropdownMenuItem>
+>>>>>>> edec9658261d4846068d6aed511b7bc2a5f80e2b
                 <DropdownMenuItem
                   className="group"
                   onClick={() => {
@@ -238,6 +244,10 @@ export default function NotesApp() {
                     className="ml-auto dark:group-hover:bg-secondary/60"
                   />
                 </DropdownMenuItem>
+<<<<<<< HEAD
+=======
+                <DropdownMenuItem>Team</DropdownMenuItem>
+>>>>>>> edec9658261d4846068d6aed511b7bc2a5f80e2b
                 <DropdownMenuSeparator />
                 <DropdownMenuItem variant="destructive">
                   <HugeiconsIcon icon={Logout01Icon} strokeWidth={2} />
