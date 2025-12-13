@@ -2,6 +2,7 @@ import './globals.css'
 
 import type { Metadata } from 'next'
 import { JetBrains_Mono, Public_Sans } from 'next/font/google'
+import { ThemeProvider } from 'next-themes'
 
 import { cn } from '@/lib/utils'
 import { Toaster } from '@/components/ui/sonner'
@@ -27,7 +28,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={cn(
           'antialiased bg-background text-foreground',
@@ -35,8 +36,10 @@ export default function RootLayout({
           fontMono.variable
         )}
       >
-        {children}
-        <Toaster richColors position="bottom-center" />
+        <ThemeProvider attribute="class">
+          {children}
+          <Toaster richColors position="bottom-center" />
+        </ThemeProvider>
       </body>
     </html>
   )
