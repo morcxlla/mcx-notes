@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { User } from '@supabase/supabase-js'
 
 import { notesDB, syncEngine } from '@/lib/db'
@@ -7,7 +7,15 @@ import { createClient } from '@/lib/supabase/client'
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
-  const supabase = createClient()
+
+  const supabase = useMemo(() => createClient(), [])
+
+  const initSync = async (userId: string) => {
+    await notesDB.migrateAnonymousNotes(userId)
+    setTimeout(() => {
+      syncEngine.startSync(userId)
+    }, 1000)
+  }
 
   useEffect(() => {
     // Get initial session
@@ -37,20 +45,10 @@ export function useAuth() {
       subscription.unsubscribe()
       syncEngine.stopSync()
     }
-  }, [])
-
-  const initSync = async (userId: string) => {
-    await notesDB.migrateAnonymousNotes(userId)
-    // Small delay to avoid rate limiting on initial auth
-    setTimeout(() => {
-      syncEngine.startSync(userId)
-    }, 1000)
-  }
+  }, [supabase])
 
   const signInWithOTP = async (email: string) => {
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-    })
+    const { error } = await supabase.auth.signInWithOtp({ email })
     if (error) throw error
   }
 
