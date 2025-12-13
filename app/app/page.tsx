@@ -5,6 +5,7 @@ import Link from 'next/link'
 import {
   Delete01Icon,
   File02Icon,
+  FileUnlockedIcon,
   GithubIcon,
   Loading03Icon,
   Logout01Icon,
@@ -405,14 +406,25 @@ export default function NotesApp() {
                   />
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
+
                 {user ? (
-                  <DropdownMenuItem
-                    variant="destructive"
-                    onClick={handleSignOut}
-                  >
-                    <HugeiconsIcon icon={Logout01Icon} strokeWidth={2} />
-                    Logout
-                  </DropdownMenuItem>
+                  <>
+                    <DropdownMenuItem disabled>
+                      <HugeiconsIcon
+                        icon={FileUnlockedIcon}
+                        strokeWidth={2}
+                        className={cn('size-4 shrink-0')}
+                      />
+                      Encrypt
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      variant="destructive"
+                      onClick={handleSignOut}
+                    >
+                      <HugeiconsIcon icon={Logout01Icon} strokeWidth={2} />
+                      Logout
+                    </DropdownMenuItem>
+                  </>
                 ) : (
                   <DropdownMenuItem onClick={() => setLoginDialogOpen(true)}>
                     <HugeiconsIcon icon={UserIcon} strokeWidth={2} />
