@@ -214,4 +214,16 @@
   .markdown-preview img {
     @apply max-w-full h-auto rounded-lg my-4;
   }
+
+  .markdown-preview del {
+    @apply line-through opacity-70;
+  }
+
+  .markdown-preview input[type='checkbox'] {
+    @apply mr-2 cursor-pointer;
+  }
+
+  .markdown-preview ul > li:has(input[type='checkbox']) {
+    @apply list-none -ml-6;
+  }
 }

@@ -17,6 +17,7 @@ import {
 import { HugeiconsIcon } from '@hugeicons/react'
 import { useTheme } from 'next-themes'
 import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import { toast } from 'sonner'
 
 import { notesDB, type Note } from '@/lib/db'
@@ -508,7 +509,9 @@ export default function NotesApp() {
               {showPreview ? (
                 <ScrollArea className="h-full">
                   <div className="p-8 max-w-5xl mx-auto markdown-preview">
-                    <ReactMarkdown>{content}</ReactMarkdown>
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {content}
+                    </ReactMarkdown>
                   </div>
                 </ScrollArea>
               ) : (

@@ -24,6 +24,9 @@ Unordered lists with \`-\` or \`*\`:
 - Item 2
   - Nested item
 
+- [x] Checked item
+- [ ] Unchecked item
+
 Ordered lists with numbers:
 1. First item
 2. Second item
