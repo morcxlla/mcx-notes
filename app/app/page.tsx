@@ -38,7 +38,6 @@ import { notesDB, type Note } from '@/lib/db'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/use-auth'
 import { usePWAInstall } from '@/hooks/user-pwa-install'
-import { Badge } from '@/components/ui/badge'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import {
@@ -634,26 +633,13 @@ export default function NotesApp() {
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 {user ? (
-                  <>
-                    <DropdownMenuItem disabled>
-                      <HugeiconsIcon
-                        icon={FileUnlockedIcon}
-                        strokeWidth={2}
-                        className="size-4 shrink-0"
-                      />
-                      Encrypt
-                      <Badge variant="secondary" className="ml-auto">
-                        Upcoming
-                      </Badge>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      variant="destructive"
-                      onClick={handleSignOut}
-                    >
-                      <HugeiconsIcon icon={Logout01Icon} strokeWidth={2} />
-                      Logout
-                    </DropdownMenuItem>
-                  </>
+                  <DropdownMenuItem
+                    variant="destructive"
+                    onClick={handleSignOut}
+                  >
+                    <HugeiconsIcon icon={Logout01Icon} strokeWidth={2} />
+                    Logout
+                  </DropdownMenuItem>
                 ) : (
                   <DropdownMenuItem onClick={() => setLoginDialogOpen(true)}>
                     <HugeiconsIcon icon={UserIcon} strokeWidth={2} /> Login
