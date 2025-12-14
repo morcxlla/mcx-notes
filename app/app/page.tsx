@@ -30,6 +30,7 @@ import { notesDB, type Note } from '@/lib/db'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/use-auth'
 import { usePWAInstall } from '@/hooks/user-pwa-install'
+import { Badge } from '@/components/ui/badge'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import {
@@ -383,6 +384,9 @@ export default function NotesApp() {
                         className="size-4 shrink-0"
                       />
                       Encrypt
+                      <Badge variant="secondary" className="ml-auto">
+                        Upcoming
+                      </Badge>
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       variant="destructive"
