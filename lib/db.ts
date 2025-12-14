@@ -10,6 +10,11 @@ export interface Note {
   updatedAt: number
   userId?: string
   deleted?: boolean
+  // Encryption fields (nullable - only set if encrypted)
+  encryptedContent?: string
+  salt?: string
+  nonce?: string
+  authTag?: string
 }
 
 class NotesDatabase extends Dexie {
@@ -17,7 +22,7 @@ class NotesDatabase extends Dexie {
 
   constructor() {
     super('NotesDB')
-    this.version(1).stores({
+    this.version(2).stores({
       notes: 'id, userId, updatedAt, deleted',
     })
   }
@@ -43,6 +48,10 @@ class NotesDatabase extends Dexie {
           createdAt: new Date(n.created_at).getTime(),
           updatedAt: new Date(n.updated_at).getTime(),
           userId: n.user_id,
+          encryptedContent: n.encrypted_content,
+          salt: n.salt,
+          nonce: n.nonce,
+          authTag: n.auth_tag,
         }))
         await this.notes.bulkPut(formatted)
         return formatted
@@ -66,6 +75,10 @@ class NotesDatabase extends Dexie {
         content: note.content,
         created_at: new Date(note.createdAt).toISOString(),
         updated_at: new Date(note.updatedAt).toISOString(),
+        encrypted_content: note.encryptedContent || null,
+        salt: note.salt || null,
+        nonce: note.nonce || null,
+        auth_tag: note.authTag || null,
       })
       if (error) throw error
     }
