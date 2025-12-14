@@ -448,18 +448,24 @@ export default function NotesApp() {
           </DialogHeader>
           <div className="space-y-4 pt-4">
             {!otpSent ? (
-              <>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault()
+                  handleSignIn()
+                }}
+                className="space-y-4"
+              >
                 <Input
                   type="email"
+                  id="_loginEmail"
+                  autoComplete="email"
                   placeholder="your@email.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') handleSignIn()
-                  }}
                 />
+
                 <Button
-                  onClick={handleSignIn}
+                  type="submit"
                   className="w-full"
                   size="lg"
                   disabled={isSubmitting}
@@ -477,7 +483,7 @@ export default function NotesApp() {
                     'Send code'
                   )}
                 </Button>
-              </>
+              </form>
             ) : (
               <>
                 <div className="space-y-2">
