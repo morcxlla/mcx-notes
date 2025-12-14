@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import {
   Delete01Icon,
@@ -69,69 +69,51 @@ export default function NotesApp() {
   const { user, loading, signInWithOTP, verifyOTP, signOut } = useAuth()
   const { setTheme, resolvedTheme } = useTheme()
 
-  useEffect(() => {
-    const loadNotes = async () => {
-      try {
-        await notesDB.init()
-        const loadedNotes = await notesDB.getAllNotes()
-        setNotes(loadedNotes)
-        if (loadedNotes.length > 0) {
-          setSelectedNoteId(loadedNotes[0].id)
-          setTitle(loadedNotes[0].title)
-          setContent(loadedNotes[0].content)
-        }
-      } catch (error) {
-        console.error('Error loading notes from IndexedDB:', error)
-        toast.error('Error loading notes from IndexedDB')
+  const loadNotes = useCallback(async () => {
+    try {
+      await notesDB.init()
+      const loadedNotes = await notesDB.getAllNotes(user?.id)
+      setNotes(loadedNotes)
+      if (loadedNotes.length > 0) {
+        setSelectedNoteId(loadedNotes[0].id)
+        setTitle(loadedNotes[0].title)
+        setContent(loadedNotes[0].content)
       }
-    }
-    loadNotes()
-  }, [])
-
-  // Refresh notes list when user changes (after migration)
-  useEffect(() => {
-    if (user) {
-      const refreshNotes = async () => {
-        const loadedNotes = await notesDB.getAllNotes()
-        setNotes(loadedNotes)
-      }
-      // Wait a bit for migration to complete
-      setTimeout(refreshNotes, 1000)
+    } catch {
+      toast.error('Failed to load notes')
     }
   }, [user])
 
   useEffect(() => {
-    if (selectedNoteId) {
-      const timeoutId = setTimeout(async () => {
-        const updatedNote = notes.find((note) => note.id === selectedNoteId)
-        if (updatedNote) {
-          const noteToSave = {
-            ...updatedNote,
-            title,
-            content,
-            updatedAt: Date.now(),
-            userId: user?.id,
-          }
-          try {
-            await notesDB.saveNote(noteToSave)
-            setNotes((prevNotes) =>
-              prevNotes.map((note) =>
-                note.id === selectedNoteId ? noteToSave : note
-              )
-            )
-          } catch (error) {
-            console.error('Error saving note:', error)
-            toast.error('Error saving note')
-          }
-        }
-      }, 500)
-      return () => clearTimeout(timeoutId)
-    }
+    loadNotes()
+  }, [loadNotes])
+
+  useEffect(() => {
+    if (!selectedNoteId) return
+    const timeout = setTimeout(async () => {
+      const updatedNote = notes.find((n) => n.id === selectedNoteId)
+      if (!updatedNote) return
+      const noteToSave = {
+        ...updatedNote,
+        title,
+        content,
+        updatedAt: Date.now(),
+        userId: user?.id,
+      }
+      try {
+        await notesDB.saveNote(noteToSave)
+        setNotes((prev) =>
+          prev.map((n) => (n.id === selectedNoteId ? noteToSave : n))
+        )
+      } catch {
+        toast.error('Failed to save note')
+      }
+    }, 500)
+    return () => clearTimeout(timeout)
   }, [title, content, selectedNoteId, notes, user])
 
   const createNewNote = async () => {
     const isFirstNote = notes.length === 0
-
     const newNote: Note = {
       id: crypto.randomUUID(),
       title: isFirstNote ? 'Welcome to Notes' : 'New note',
@@ -140,30 +122,27 @@ export default function NotesApp() {
       updatedAt: Date.now(),
       userId: user?.id,
     }
-
     try {
       await notesDB.saveNote(newNote)
       setNotes([newNote, ...notes])
       setSelectedNoteId(newNote.id)
       setTitle(newNote.title)
       setContent(newNote.content)
-    } catch (error) {
-      console.error('Error creating note:', error)
-      toast.error('Error creating note')
+    } catch {
+      toast.error('Failed to create note')
     }
   }
 
   const deleteNote = async (id: string) => {
     try {
-      await notesDB.deleteNote(id)
-      const updatedNotes = notes.filter((note) => note.id !== id)
-      setNotes(updatedNotes)
-
+      await notesDB.deleteNote(id, user?.id)
+      const updated = notes.filter((n) => n.id !== id)
+      setNotes(updated)
       if (selectedNoteId === id) {
-        if (updatedNotes.length > 0) {
-          setSelectedNoteId(updatedNotes[0].id)
-          setTitle(updatedNotes[0].title)
-          setContent(updatedNotes[0].content)
+        if (updated.length > 0) {
+          setSelectedNoteId(updated[0].id)
+          setTitle(updated[0].title)
+          setContent(updated[0].content)
         } else {
           setSelectedNoteId(null)
           setTitle('')
@@ -171,9 +150,8 @@ export default function NotesApp() {
         }
       }
       toast.success('Note deleted')
-    } catch (error) {
-      console.error('Error deleting note:', error)
-      toast.error('Error deleting note')
+    } catch {
+      toast.error('Failed to delete note')
     }
   }
 
@@ -185,7 +163,6 @@ export default function NotesApp() {
 
   const formatMarkdown = async () => {
     if (!content || isFormatting) return
-
     setIsFormatting(true)
     try {
       const result = await remark()
@@ -197,65 +174,46 @@ export default function NotesApp() {
           listItemIndent: 'one',
         })
         .process(content)
-
-      const formatted = String(result)
-      setContent(formatted)
+      setContent(String(result))
       toast.success('Markdown formatted')
-    } catch (error) {
-      console.error('Error formatting markdown:', error)
+    } catch {
       toast.error('Failed to format markdown')
     } finally {
       setIsFormatting(false)
     }
   }
 
-  // Format markdown shortcut
   useHotkeys(
     'mod+f',
     (e) => {
       e.preventDefault()
-      if (selectedNoteId && !showPreview) {
-        formatMarkdown()
-      }
+      if (selectedNoteId && !showPreview) formatMarkdown()
     },
     { enableOnFormTags: ['TEXTAREA'] }
   )
 
-  // Auth logic
   const handleSignIn = async () => {
-    if (!email) {
-      toast.error('Please enter your email')
-      return
-    }
-
+    if (!email) return toast.error('Enter email')
     setIsSubmitting(true)
     try {
       await signInWithOTP(email)
       setOTPSent(true)
       toast.success('Check your email for the code')
-    } catch {
-      // Error already handled in useAuth hook
     } finally {
       setIsSubmitting(false)
     }
   }
 
   const handleVerifyOTP = async () => {
-    if (!otp || otp.length !== 8) {
-      toast.error('Please enter the 8-digit code')
-      return
-    }
-
+    if (!otp || otp.length !== 8) return toast.error('Enter 8-digit code')
     setIsSubmitting(true)
     try {
       await verifyOTP(email, otp)
-      toast.success('Signed in successfully!')
+      toast.success('Signed in')
       setLoginDialogOpen(false)
       setEmail('')
       setOTP('')
       setOTPSent(false)
-    } catch {
-      // Error already handled in useAuth hook
     } finally {
       setIsSubmitting(false)
     }
@@ -264,15 +222,12 @@ export default function NotesApp() {
   const handleSignOut = async () => {
     try {
       await signOut()
-      toast.success('Signed out successfully')
-    } catch {
-      // Error already handled in useAuth hook
-    }
+      toast.success('Signed out')
+    } catch {}
   }
 
   return (
     <div className="flex h-screen">
-      {/* Sidebar */}
       <aside className="w-80 border-r border-border bg-card flex flex-col">
         <div className="p-4 border-b border-border">
           <Button onClick={createNewNote} className="w-full">
@@ -301,8 +256,7 @@ export default function NotesApp() {
                         strokeWidth={2}
                         className={cn(
                           'size-4 shrink-0',
-
-                          note.syncedAt && user
+                          note.userId
                             ? 'text-green-500'
                             : 'text-muted-foreground'
                         )}
@@ -379,23 +333,22 @@ export default function NotesApp() {
                   <HugeiconsIcon
                     icon={GithubIcon}
                     strokeWidth={2}
-                    className={cn('size-4 shrink-0')}
-                  />
+                    className="size-4 shrink-0"
+                  />{' '}
                   Source code
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-
                 <DropdownMenuItem
                   className="group"
-                  onClick={() => {
+                  onClick={() =>
                     setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')
-                  }}
+                  }
                 >
                   <HugeiconsIcon
                     icon={Moon02Icon}
                     strokeWidth={2}
-                    className={cn('size-4 shrink-0')}
-                  />
+                    className="size-4 shrink-0"
+                  />{' '}
                   Night mode
                   <Switch
                     checked={resolvedTheme === 'dark'}
@@ -406,29 +359,27 @@ export default function NotesApp() {
                   />
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-
                 {user ? (
                   <>
                     <DropdownMenuItem disabled>
                       <HugeiconsIcon
                         icon={FileUnlockedIcon}
                         strokeWidth={2}
-                        className={cn('size-4 shrink-0')}
-                      />
+                        className="size-4 shrink-0"
+                      />{' '}
                       Encrypt
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       variant="destructive"
                       onClick={handleSignOut}
                     >
-                      <HugeiconsIcon icon={Logout01Icon} strokeWidth={2} />
+                      <HugeiconsIcon icon={Logout01Icon} strokeWidth={2} />{' '}
                       Logout
                     </DropdownMenuItem>
                   </>
                 ) : (
                   <DropdownMenuItem onClick={() => setLoginDialogOpen(true)}>
-                    <HugeiconsIcon icon={UserIcon} strokeWidth={2} />
-                    Login
+                    <HugeiconsIcon icon={UserIcon} strokeWidth={2} /> Login
                   </DropdownMenuItem>
                 )}
               </DropdownMenuGroup>
@@ -437,7 +388,6 @@ export default function NotesApp() {
         </div>
       </aside>
 
-      {/* Login Dialog - Outside dropdown */}
       <Dialog open={loginDialogOpen} onOpenChange={setLoginDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -463,7 +413,6 @@ export default function NotesApp() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />
-
                 <Button
                   type="submit"
                   className="w-full"
@@ -476,7 +425,7 @@ export default function NotesApp() {
                         icon={Loading03Icon}
                         strokeWidth={2}
                         className="animate-spin"
-                      />
+                      />{' '}
                       Sending code...
                     </>
                   ) : (
@@ -516,7 +465,7 @@ export default function NotesApp() {
                         icon={Loading03Icon}
                         strokeWidth={2}
                         className="animate-spin"
-                      />
+                      />{' '}
                       Verifying...
                     </>
                   ) : (
@@ -539,7 +488,6 @@ export default function NotesApp() {
         </DialogContent>
       </Dialog>
 
-      {/* Editor */}
       <main className="flex-1 flex flex-col">
         {selectedNoteId ? (
           <>
@@ -564,7 +512,7 @@ export default function NotesApp() {
                         icon={Loading03Icon}
                         strokeWidth={2}
                         className="animate-spin"
-                      />
+                      />{' '}
                       Formatting...
                     </>
                   ) : (
@@ -572,11 +520,10 @@ export default function NotesApp() {
                       <HugeiconsIcon
                         icon={TextAlignLeft01Icon}
                         strokeWidth={2}
-                      />
+                      />{' '}
                       Format
                     </>
                   )}
-
                   <Kbd>Cmd + F</Kbd>
                 </Button>
                 <Button
@@ -586,13 +533,12 @@ export default function NotesApp() {
                 >
                   {showPreview ? (
                     <>
-                      <HugeiconsIcon icon={SourceCodeIcon} strokeWidth={2} />
+                      <HugeiconsIcon icon={SourceCodeIcon} strokeWidth={2} />{' '}
                       Editor
                     </>
                   ) : (
                     <>
-                      <HugeiconsIcon icon={ViewIcon} strokeWidth={2} />
-                      Preview
+                      <HugeiconsIcon icon={ViewIcon} strokeWidth={2} /> Preview
                     </>
                   )}
                 </Button>
