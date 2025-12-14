@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import {
+  ComputerIcon,
   Delete01Icon,
   File02Icon,
   FileUnlockedIcon,
@@ -28,6 +29,7 @@ import { toast } from 'sonner'
 import { notesDB, type Note } from '@/lib/db'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/use-auth'
+import { usePWAInstall } from '@/hooks/user-pwa-install'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import {
@@ -68,6 +70,7 @@ export default function NotesApp() {
 
   const { user, loading, signInWithOTP, verifyOTP, signOut } = useAuth()
   const { setTheme, resolvedTheme } = useTheme()
+  const { isInstallable, install } = usePWAInstall()
 
   const loadNotes = useCallback(async () => {
     try {
@@ -334,7 +337,7 @@ export default function NotesApp() {
                     icon={GithubIcon}
                     strokeWidth={2}
                     className="size-4 shrink-0"
-                  />{' '}
+                  />
                   Source code
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
@@ -348,7 +351,7 @@ export default function NotesApp() {
                     icon={Moon02Icon}
                     strokeWidth={2}
                     className="size-4 shrink-0"
-                  />{' '}
+                  />
                   Night mode
                   <Switch
                     checked={resolvedTheme === 'dark'}
@@ -358,6 +361,18 @@ export default function NotesApp() {
                     className="ml-auto dark:group-focus:bg-secondary/60"
                   />
                 </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="group"
+                  onClick={install}
+                  disabled={!isInstallable}
+                >
+                  <HugeiconsIcon
+                    icon={ComputerIcon}
+                    strokeWidth={2}
+                    className="size-4 shrink-0"
+                  />
+                  Install
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 {user ? (
                   <>
@@ -366,14 +381,14 @@ export default function NotesApp() {
                         icon={FileUnlockedIcon}
                         strokeWidth={2}
                         className="size-4 shrink-0"
-                      />{' '}
+                      />
                       Encrypt
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       variant="destructive"
                       onClick={handleSignOut}
                     >
-                      <HugeiconsIcon icon={Logout01Icon} strokeWidth={2} />{' '}
+                      <HugeiconsIcon icon={Logout01Icon} strokeWidth={2} />
                       Logout
                     </DropdownMenuItem>
                   </>
@@ -425,7 +440,7 @@ export default function NotesApp() {
                         icon={Loading03Icon}
                         strokeWidth={2}
                         className="animate-spin"
-                      />{' '}
+                      />
                       Sending code...
                     </>
                   ) : (
@@ -465,7 +480,7 @@ export default function NotesApp() {
                         icon={Loading03Icon}
                         strokeWidth={2}
                         className="animate-spin"
-                      />{' '}
+                      />
                       Verifying...
                     </>
                   ) : (
@@ -512,7 +527,7 @@ export default function NotesApp() {
                         icon={Loading03Icon}
                         strokeWidth={2}
                         className="animate-spin"
-                      />{' '}
+                      />
                       Formatting...
                     </>
                   ) : (
@@ -520,7 +535,7 @@ export default function NotesApp() {
                       <HugeiconsIcon
                         icon={TextAlignLeft01Icon}
                         strokeWidth={2}
-                      />{' '}
+                      />
                       Format
                     </>
                   )}
@@ -533,7 +548,7 @@ export default function NotesApp() {
                 >
                   {showPreview ? (
                     <>
-                      <HugeiconsIcon icon={SourceCodeIcon} strokeWidth={2} />{' '}
+                      <HugeiconsIcon icon={SourceCodeIcon} strokeWidth={2} />
                       Editor
                     </>
                   ) : (
