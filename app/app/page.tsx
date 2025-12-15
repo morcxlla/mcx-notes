@@ -11,14 +11,17 @@ import {
   Loading03Icon,
   LockIcon,
   Logout01Icon,
+  Menu01Icon,
   Moon02Icon,
   PlusSignIcon,
   SourceCodeIcon,
   TextAlignLeft01Icon,
   UserIcon,
   ViewIcon,
+  Wrench01Icon,
 } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
+import { VariantProps } from 'class-variance-authority'
 import { useTheme } from 'next-themes'
 import { useHotkeys } from 'react-hotkeys-hook'
 import ReactMarkdown from 'react-markdown'
@@ -59,6 +62,7 @@ import { Input } from '@/components/ui/input'
 import { Kbd } from '@/components/ui/kbd'
 import { Label } from '@/components/ui/label'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
 import PasswordValidator from '@/components/password-validator'
@@ -473,10 +477,10 @@ export default function NotesApp() {
     ? isNoteUnlocked(selectedNoteId)
     : false
 
-  return (
-    <div className="flex h-screen">
-      <aside className="w-80 border-r border-border bg-card flex flex-col">
-        <div className="p-4 border-b border-border">
+  const SidebarContent = () => {
+    return (
+      <>
+        <div className="p-4 border-b">
           <Button onClick={createNewNote} className="w-full">
             <HugeiconsIcon icon={PlusSignIcon} strokeWidth={2} />
             New note
@@ -649,6 +653,63 @@ export default function NotesApp() {
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
+      </>
+    )
+  }
+
+  const menuActions = [
+    {
+      show: isCurrentNoteEncrypted && isCurrentNoteUnlocked,
+      label: 'Encrypted',
+      icon: LockIcon,
+      onClick: () => setEncryptDialogOpen(true),
+      buttonVariant: 'default',
+      dropdownVariant: 'default',
+    },
+    {
+      show: !isCurrentNoteEncrypted,
+      label: 'No encryption',
+      icon: FileUnlockedIcon,
+      onClick: () => setEncryptDialogOpen(true),
+      buttonVariant: 'destructive',
+      dropdownVariant: 'destructive',
+    },
+    {
+      show: isCurrentNoteEncrypted && !isCurrentNoteUnlocked,
+      label: 'Unlock',
+      icon: LockIcon,
+      onClick: () => setUnlockDialogOpen(true),
+      buttonVariant: 'outline',
+      dropdownVariant: 'default',
+    },
+    {
+      show: true,
+      label: isFormatting ? 'Formatting...' : 'Format',
+      icon: isFormatting ? Loading03Icon : TextAlignLeft01Icon,
+      onClick: formatMarkdown,
+      disabled:
+        showPreview ||
+        isFormatting ||
+        (!isCurrentNoteUnlocked && isCurrentNoteEncrypted),
+      kbd: 'Cmd + F',
+      buttonVariant: 'default',
+      dropdownVariant: 'default',
+    },
+    {
+      show: true,
+      label: showPreview ? 'Editor' : 'Preview',
+      icon: showPreview ? SourceCodeIcon : ViewIcon,
+      onClick: () => setShowPreview(!showPreview),
+      disabled: !isCurrentNoteUnlocked && isCurrentNoteEncrypted,
+      buttonVariant: 'default',
+      dropdownVariant: 'default',
+    },
+  ]
+
+  return (
+    <div className="flex h-screen">
+      <aside className="hidden w-80 border-r bg-card lg:flex flex-col">
+        <SidebarContent />
       </aside>
 
       {/* Login Dialog */}
@@ -910,94 +971,68 @@ export default function NotesApp() {
       <main className="flex-1 flex flex-col">
         {selectedNoteId ? (
           <>
-            <header className="p-4 border-b border-border bg-card flex items-center justify-between">
+            <header className="p-4 border-b bg-card flex gap-4 items-center justify-between">
+              <Sheet>
+                <SheetTrigger
+                  render={<Button variant="secondary" size="icon-sm" />}
+                >
+                  <HugeiconsIcon icon={Menu01Icon} strokeWidth={2} />
+                  <span className="sr-only">Open sidebar</span>
+                </SheetTrigger>
+                <SheetContent side="left">
+                  <SidebarContent />
+                </SheetContent>
+              </Sheet>
               <Input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Note title"
-                className="rounded-none text-xl font-semibold border-none bg-transparent focus-visible:ring-0 px-0"
+                className="rounded-none font-semibold border-none bg-transparent focus-visible:ring-0 px-0"
               />
-              <div className="flex items-center gap-2">
-                {isCurrentNoteEncrypted && isCurrentNoteUnlocked && (
-                  <Button
-                    size="sm"
-                    onClick={() => setEncryptDialogOpen(true)}
-                    title="Manage encryption"
-                  >
-                    <HugeiconsIcon icon={LockIcon} strokeWidth={2} />
-                    Encrypted
-                  </Button>
-                )}
-                {!isCurrentNoteEncrypted && (
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => setEncryptDialogOpen(true)}
-                    title="Configure encryption"
-                  >
-                    <HugeiconsIcon icon={FileUnlockedIcon} strokeWidth={2} />
-                    No encryption
-                  </Button>
-                )}
-                {isCurrentNoteEncrypted && !isCurrentNoteUnlocked && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setUnlockDialogOpen(true)}
-                  >
-                    <HugeiconsIcon icon={LockIcon} strokeWidth={2} />
-                    Unlock
-                  </Button>
-                )}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={formatMarkdown}
-                  disabled={
-                    showPreview ||
-                    isFormatting ||
-                    (!isCurrentNoteUnlocked && isCurrentNoteEncrypted)
-                  }
-                  title="Format markdown (Cmd+F)"
-                >
-                  {isFormatting ? (
-                    <>
-                      <HugeiconsIcon
-                        icon={Loading03Icon}
-                        strokeWidth={2}
-                        className="animate-spin"
-                      />
-                      Formatting...
-                    </>
-                  ) : (
-                    <>
-                      <HugeiconsIcon
-                        icon={TextAlignLeft01Icon}
-                        strokeWidth={2}
-                      />
-                      Format
-                    </>
-                  )}
-                  <Kbd>Cmd + F</Kbd>
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowPreview(!showPreview)}
-                  disabled={!isCurrentNoteUnlocked && isCurrentNoteEncrypted}
-                >
-                  {showPreview ? (
-                    <>
-                      <HugeiconsIcon icon={SourceCodeIcon} strokeWidth={2} />
-                      Editor
-                    </>
-                  ) : (
-                    <>
-                      <HugeiconsIcon icon={ViewIcon} strokeWidth={2} /> Preview
-                    </>
-                  )}
-                </Button>
+              <div className="items-center gap-2 hidden md:flex">
+                {menuActions
+                  .filter((a) => a.show)
+                  .map((a) => (
+                    <Button
+                      key={a.label}
+                      size="sm"
+                      variant={
+                        a.buttonVariant as VariantProps<
+                          typeof buttonVariants
+                        >['variant']
+                      }
+                      onClick={a.onClick}
+                      disabled={a.disabled}
+                    >
+                      <HugeiconsIcon icon={a.icon} strokeWidth={2} />
+                      {a.label}
+                      {a.kbd && <Kbd>{a.kbd}</Kbd>}
+                    </Button>
+                  ))}
               </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  className="md:hidden"
+                  render={<Button variant="outline" size="icon-sm" />}
+                >
+                  <HugeiconsIcon icon={Wrench01Icon} strokeWidth={2} />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  {menuActions
+                    .filter((a) => a.show)
+                    .map((a) => (
+                      <DropdownMenuItem
+                        key={a.label}
+                        onClick={a.onClick}
+                        disabled={a.disabled}
+                        variant={a.dropdownVariant as 'default' | 'destructive'}
+                      >
+                        <HugeiconsIcon icon={a.icon} strokeWidth={2} />
+                        <span>{a.label}</span>
+                      </DropdownMenuItem>
+                    ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </header>
             <div className="flex-1 overflow-hidden">
               {isCurrentNoteEncrypted && !isCurrentNoteUnlocked ? (
